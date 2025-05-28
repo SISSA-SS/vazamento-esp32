@@ -106,5 +106,3 @@ void loop() {
 
 
 
-
-Adicionando código do projeto com ESP32
