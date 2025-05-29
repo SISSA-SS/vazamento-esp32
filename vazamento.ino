@@ -1,106 +1,102 @@
-#include <WiFi.h>             // Biblioteca para conexão Wi-Fi
-#include <PubSubClient.h>     // Biblioteca para comunicação MQTT
-#include <DHT.h>              // Biblioteca para sensor de temperatura/umidade
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <DHT.h>
 
-// Informações da rede Wi-Fi (simulação Wokwi)
 const char* ssid = "Wokwi-GUEST";
 const char* password = "";
-
-// Configurações do servidor MQTT público
 const char* mqtt_server = "test.mosquitto.org";
-const char* topic = "cicera/vazamento"; // Tópico onde será publicado o alerta
 
-// Objetos para conexão Wi-Fi e MQTT
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-// Definições dos pinos conectados
-#define DHTPIN 15          // Pino onde o sensor DHT está ligado
-#define BUZZER_PIN 2       // Pino onde o buzzer está ligado
-#define DHTTYPE DHT22      // Tipo do sensor (DHT11 ou DHT22)
+#define DHTPIN 15
+#define DHTTYPE DHT22
+#define BUZZER_PIN 2
 
-// Criação do objeto do sensor DHT
 DHT dht(DHTPIN, DHTTYPE);
 
-// Limiar de umidade para considerar como vazamento
-int umidade_limite = 70;
+const int umidade_limite = 70;
 
 void setup_wifi() {
-  delay(10);
-  Serial.begin(115200);  // Inicializa o monitor serial
+  Serial.begin(115200);
+  delay(100);
+
   Serial.println();
-  Serial.print("Conectando ao WiFi ");
+  Serial.print("Conectando ao WiFi: ");
   Serial.println(ssid);
 
-  // Conecta ao Wi-Fi
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
 
-  Serial.println("");
-  Serial.println("WiFi conectado");
-  Serial.println("Endereço IP: ");
-  Serial.println(WiFi.localIP()); // Mostra IP atribuído
+  Serial.println();
+  Serial.println("WiFi conectado com sucesso! ");
+  Serial.print("Endereço IP: ");
+  Serial.println(WiFi.localIP());
 }
 
-// Reconecta ao servidor MQTT caso a conexão caia
 void reconnect() {
   while (!client.connected()) {
-    Serial.print("Tentando conectar ao MQTT...");
+    Serial.print("Conectando ao servidor MQTT...");
     if (client.connect("ESP32Client")) {
-      Serial.println("Conectado ao servidor MQTT!");
+      Serial.println("Conectado!");
     } else {
-      Serial.print("Falha, rc=");
+      Serial.print("Falha (rc=");
       Serial.print(client.state());
-      Serial.println(" Tentando novamente em 5 segundos");
+      Serial.println("). Tentando novamente em 5 segundos...");
       delay(5000);
     }
   }
 }
 
 void setup() {
-  pinMode(BUZZER_PIN, OUTPUT);       // Define o pino do buzzer como saída
-  digitalWrite(BUZZER_PIN, LOW);     // Inicia o buzzer desligado
-  dht.begin();                       // Inicializa o sensor DHT
-  setup_wifi();                      // Conecta ao Wi-Fi
-  client.setServer(mqtt_server, 1883); // Define o servidor MQTT e porta
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW);
+
+  dht.begin();
+  setup_wifi();
+  client.setServer(mqtt_server, 1883);
 }
 
 void loop() {
-  // Verifica conexão com o servidor MQTT
   if (!client.connected()) {
     reconnect();
   }
   client.loop();
 
-  // Simulando o valor da umidade (valor acima de 70 para testar o alerta)
-  float h = 75.0; // Simula uma umidade de 75%
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
 
-  // Verifica se a leitura foi bem-sucedida
-  if (isnan(h)) {
-    Serial.println("Falha na leitura do sensor DHT!");
+  if (isnan(h) || isnan(t)) {
+    Serial.println("Erro ao ler o sensor DHT!");
     return;
   }
 
-  // Mostra o valor da umidade no monitor serial
-  Serial.print("Umidade simulada: ");
+  Serial.print("Umidade: ");
   Serial.print(h);
-  Serial.println(" %");
+  Serial.print(" % | Temperatura: ");
+  Serial.print(t);
+  Serial.println(" °C");
 
-  // Se a umidade passar do limite, aciona o alerta
+  // Converte valores para string e publica em tópicos separados
+  char tempString[8];
+  char humString[8];
+
+  dtostrf(t, 1, 2, tempString);
+  dtostrf(h, 1, 2, humString);
+
+  client.publish("cicera/temperatura", tempString);
+  client.publish("cicera/umidade", humString);
+
   if (h > umidade_limite) {
-    Serial.println("Vazamento detectado!"); // Mostra no monitor serial
-    digitalWrite(BUZZER_PIN, HIGH); // Liga o buzzer
-    client.publish(topic, "Alerta: Vazamento detectado!"); // Publica no MQTT
+    Serial.println(">> ALERTA: Vazamento detectado!");
+    digitalWrite(BUZZER_PIN, HIGH);
+    client.publish("cicera/vazamento", "Alerta: Vazamento detectado!");
   } else {
-    digitalWrite(BUZZER_PIN, LOW); // Desliga o buzzer
+    digitalWrite(BUZZER_PIN, LOW);
   }
 
-  delay(2000); // Aguarda 2 segundos para nova leitura
+  delay(2000);
 }
-
-
-
-
