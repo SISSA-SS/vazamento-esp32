@@ -34,4 +34,4 @@ Projeto acadêmico para a disciplina de Sistemas Embarcados.
 
 ## Demonstração
 
-[Link para o vídeo de demonstração](coloque aqui quando gravar de novo mostrando o MQTT funcionando)
+[[Link para o vídeo de demonstração]([coloque aqui quando gravar de novo mostrando o MQTT funcionando)](https://youtu.be/N20J7lxckE8](https://youtu.be/N20J7lxckE8))
