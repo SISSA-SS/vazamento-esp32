@@ -26,7 +26,7 @@ Este projeto utiliza um ESP32 com sensor DHT22 e buzzer para detectar aumento de
 - **Tópico:** `cicera/vazamento`
 
 ## 🧪 Demonstração
-🔗 [Link para o vídeo de demonstração](coloque aqui quando gravar novamente mostrando o MQTT funcionando)
+🔗 [[Link para o vídeo de demonstração](https://youtu.be/5n2HH2puki8)]
 
 ## 👩‍💻 Autor
 Projeto acadêmico para a disciplina de Sistemas Embarcados.
@@ -34,4 +34,5 @@ Projeto acadêmico para a disciplina de Sistemas Embarcados.
 
 ## Demonstração
 
-[[Link para o vídeo de demonstração]([coloque aqui quando gravar de novo mostrando o MQTT funcionando)](https://youtu.be/N20J7lxckE8](https://youtu.be/N20J7lxckE8))
+[[Link para o vídeo de demonstração]([https://youtu.be/5n2HH2puki8)]
+(https://youtu.be/N20J7lxckE8](https://youtu.be/N20J7lxckE8))
